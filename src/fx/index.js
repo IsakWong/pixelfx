@@ -219,6 +219,7 @@ import * as pickups_gem_spin from "./pickups/gem-spin.js";
 import * as pickups_heart_pickup from "./pickups/heart-pickup.js";
 import * as pickups_key_glint from "./pickups/key-glint.js";
 import * as pickups_loot_beam from "./pickups/loot-beam.js";
+import * as pickups_pickup_aura from "./pickups/pickup-aura.js";
 import * as pickups_potion from "./pickups/potion.js";
 import * as pickups_power_star from "./pickups/power-star.js";
 import * as pickups_xp_orb from "./pickups/xp-orb.js";
@@ -244,6 +245,17 @@ import * as critters_jellyfish from "./critters/jellyfish.js";
 import * as critters_slime from "./critters/slime.js";
 import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
+import * as custom_chill_snow from "./custom/chill-snow.js";
+import * as custom_ice_block_16 from "./custom/ice-block-16.js";
+import * as custom_ice_block_32 from "./custom/ice-block-32.js";
+import * as custom_ice_disc from "./custom/ice-disc.js";
+import * as custom_ice_pillar from "./custom/ice-pillar.js";
+import * as custom_ice_pillar_break from "./custom/ice-pillar-break.js";
+import * as custom_ice_pillar_rise from "./custom/ice-pillar-rise.js";
+import * as custom_laser_impact from "./custom/laser-impact.js";
+import * as custom_rank_up from "./custom/rank-up.js";
+import * as custom_reward_gain from "./custom/reward-gain.js";
+import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
 
 export { categories } from "./categories.js";
 
@@ -467,6 +479,7 @@ export const effects = {
   "pickups/heart-pickup": pickups_heart_pickup,
   "pickups/key-glint": pickups_key_glint,
   "pickups/loot-beam": pickups_loot_beam,
+  "pickups/pickup-aura": pickups_pickup_aura,
   "pickups/potion": pickups_potion,
   "pickups/power-star": pickups_power_star,
   "pickups/xp-orb": pickups_xp_orb,
@@ -492,4 +505,15 @@ export const effects = {
   "critters/slime": critters_slime,
   "critters/snake": critters_snake,
   "critters/wisp": critters_wisp,
+  "custom/chill-snow": custom_chill_snow,
+  "custom/ice-block-16": custom_ice_block_16,
+  "custom/ice-block-32": custom_ice_block_32,
+  "custom/ice-disc": custom_ice_disc,
+  "custom/ice-pillar": custom_ice_pillar,
+  "custom/ice-pillar-break": custom_ice_pillar_break,
+  "custom/ice-pillar-rise": custom_ice_pillar_rise,
+  "custom/laser-impact": custom_laser_impact,
+  "custom/rank-up": custom_rank_up,
+  "custom/reward-gain": custom_reward_gain,
+  "custom/wisp-fire-16": custom_wisp_fire_16,
 };

@@ -4,7 +4,7 @@
 
 # pixelfx.
 
-**<!-- count -->244<!-- /count --> pixel art effects and animations, every one a small piece of code.** Fire,
+**<!-- count -->249<!-- /count --> pixel art effects and animations, every one a small piece of code.** Fire,
 explosions, magic, weather, UI, pickups, critters and more. Play them live, recolor and mirror them, drop them into
 a browser game, or export sprite sheets for any engine. Plus a Claude Code skill that makes new ones the way a
 picky pixel artist would: draft, render, look, refine.
@@ -34,7 +34,7 @@ the idea at library scale, with a skill to keep going.
 | **lightning** | 11 | ball lightning, chain lightning, charge up, electrified, lightning strike, plasma ball… |
 | **sci-fi** | 12 | emp blast, energy core, force field, glitch, hologram, jetpack… |
 | **melee** | 12 | claw swipe, dagger flurry, double slash, hammer smash, heavy cleave, scythe reap… |
-| **impacts** | 11 | blunt hit, bullet impact, critical hit, ground slam, heavy landing, hit flash… |
+| **impacts** | 12 | blunt hit, bullet impact, critical hit, ground slam, heavy landing, hit flash… |
 | **projectiles** | 13 | arrow, bullet tracer, cannon shot, energy disc, signal flare, homing missile… |
 | **spawn & death** | 10 | coin drop, disintegrate, dissolve burn, egg hatch, poof, respawn beam… |
 | **arcane** | 12 | arcane beam, arcane missiles, arcane orb, blink in, blink out, magic circle cast… |
@@ -44,9 +44,10 @@ the idea at library scale, with a skill to keep going.
 | **nature** | 13 | acid splash, boulder, earth spike, healing bloom, leaf storm, poison cloud… |
 | **weather** | 12 | aurora, blizzard, cherry blossoms, clouds, falling leaves, fireflies… |
 | **ui** | 12 | achievement, coin collect, combo counter, confetti, countdown, crit number… |
-| **pickups** | 11 | chest open, coin spin, collect burst, crystal shard, gem spin, heart pickup… |
+| **pickups** | 12 | chest open, coin spin, collect burst, crystal shard, gem spin, heart pickup… |
 | **transitions** | 10 | blinds, burn away, crt off, diamond wipe, glitch wipe, iris… |
 | **critters** | 12 | bat, bird, butterfly, eyeball, fish school, flying skull… |
+| **custom** | 3 | ice block 16, ice block 32, wisp fire 16 |
 <!-- /catalog -->
 
 Every effect is a file in `src/fx/<category>/<name>.js`. The [catalog](docs/CATALOG.md) lists them all.
@@ -84,7 +85,8 @@ node tools/render.mjs ice/frost-nova --sheet
 
 That writes a transparent PNG of every frame in a grid and an Aseprite-style JSON (frame rects, durations, and
 `meta.pixelfx` with fps, loop, columns and the pivot). Phaser's atlas loader and the Aseprite importers for Godot
-and Unity read it. `node tools/sheets.mjs` exports the whole library to `sheets/`.
+and Unity read it. `--scale 200%` (or `--scale 2`) rescales the sheet and the GIF/MP4; the JSON reports the scaled
+sizes and pivot. `node tools/sheets.mjs` exports the whole library to `sheets/`.
 
 Any effect takes a `palette` (a dark-to-bright ramp of hex colors), so a fire can burn blue and a heal can glow
 pink without touching its code:

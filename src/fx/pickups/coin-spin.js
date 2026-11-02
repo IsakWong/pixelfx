@@ -13,13 +13,15 @@ export const meta = {
   loop: true,
   fps: 30,
   bg: "ground",
-  options: { palette: ["#1e1206", "#4a2c08", "#86520c", "#c48412", "#f0b424", "#ffe066", "#fff6c4", "#ffffff"], seed: 3 },
+  options: { palette: ["#1e1206", "#4a2c08", "#86520c", "#c48412", "#f0b424", "#ffe066", "#fff6c4", "#ffffff"], seed: 3, item: true },
 };
 
 const L = new Layer(32, 32), R = 7, TH = 3, HOVER = 17;
 
 export function drawBack(p, t, o) {
-  const T = meta.duration, ph = t / T, th = ph * TAU, y = -HOVER - 2 * Math.sin(ph * TAU);
+  const T = meta.duration, ph = t / T, th = ph * TAU;
+  if (o.item === false) return;   // 纯光效版：不画物体阴影
+  const y = -HOVER - 2 * Math.sin(ph * TAU);
   // the shadow narrows as the coin turns edge-on and thins as it rises
   blobShadow(p, 0, 2.5 + 4.5 * Math.abs(Math.cos(th)) + 1.5 * Math.abs(Math.sin(th)), 0.85 - (-y - HOVER + 2) * 0.06);
 }
@@ -29,7 +31,8 @@ export function draw(p, t, o) {
   // warm light round it, swelling when the face catches the light
   const facing = Math.abs(Math.cos(th));
   p.glow(0, y, 20, C[4], 0.3 + 0.12 * facing);
-  const flash = coin3d(L, p, 0, y, R, TH, th, C);
+  // item: false 去掉硬币本体，只留光效；闪光节奏用原来的朝向周期代替
+  const flash = o.item === false ? Math.max(0, Math.sin(th * 2)) ** 2 : coin3d(L, p, 0, y, R, TH, th, C);
   p.glow(-1, y - 1, 12, C[6], 0.35 * flash);
   // a star glint where the flash leaves the rim
   if (flash > 0.3) glint(p, -4, y - 4, 1 + 3.2 * flash, C[6], 0.5 * flash);

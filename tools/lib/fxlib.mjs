@@ -1,7 +1,8 @@
 // Shared by the tools: find effects, render their frames, lay frames out, write PNG, GIF and MP4.
 
-import { readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { readdirSync, existsSync, statSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { join, dirname, relative, sep } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createFrame, clearFrame, createFx, createAct, actBounds, actTiming, composite, painterFor, drawActor, stockActor, backdrop, actorAlphaOf } from "../../src/core/index.js";
@@ -48,7 +49,8 @@ export async function loadEffect(id, dir = FX_DIR) {
 
 /**
  * Render an effect's frames. Returns { w, h, fps, n, frames: [{ t, color: RGBA over the backdrop,
- * clear: RGBA on transparency }] }. opts: { fps, seed, bg, margin, options (passed to the effect) }.
+ * clear: RGBA on transparency }] }. opts: { fps, seed, bg, margin, edgeFade, options (passed to the effect) }.
+ * edgeFade: false keeps the glow at the canvas edge (exports for engines that show the full frame).
  */
 export function renderFrames(fx, opts = {}) {
   const { meta } = fx, [W, H] = meta.size, [OX, OY] = meta.origin, m = opts.margin ?? 0;
@@ -59,7 +61,7 @@ export function renderFrames(fx, opts = {}) {
   const bg = bgKind === "none" ? null : backdrop(bgKind, w, h, OY + m);
   const inst = createFx(fx.mod, { x: OX, y: OY, ...(opts.seed !== undefined ? { seed: opts.seed } : {}), ...(opts.options ?? {}) });
   const actor = meta.actor && opts.actor !== false ? inst.options.actor ?? stockActor() : null;
-  const fade = m === 0 && !isScreen(meta);
+  const fade = opts.edgeFade !== false && m === 0 && !isScreen(meta);
   const frames = [];
   for (let i = 0; i < n; i++) {
     if (i > 0) inst.update(1 / fps);
@@ -142,16 +144,29 @@ export function edgeFade(f, E = 8) {
   }
 }
 
-/** Nearest-neighbour upscale of RGBA. */
-export function upscale(rgba, w, h, k) {
-  if (k === 1) return rgba;
-  const out = new Uint8ClampedArray(w * k * h * k * 4), src = new Uint32Array(rgba.buffer, rgba.byteOffset, w * h);
-  const dst = new Uint32Array(out.buffer);
-  for (let y = 0; y < h * k; y++) {
-    const sy = (y / k) | 0;
-    for (let x = 0; x < w * k; x++) dst[y * w * k + x] = src[sy * w + ((x / k) | 0)];
+/** Nearest-neighbour resample of RGBA to an arbitrary size. */
+export function resample(rgba, w, h, sw, sh) {
+  if (sw === w && sh === h) return rgba;
+  const src = new Uint32Array(rgba.buffer, rgba.byteOffset, w * h);
+  const out = new Uint8ClampedArray(sw * sh * 4), dst = new Uint32Array(out.buffer);
+  for (let y = 0; y < sh; y++) {
+    const sy = Math.min(h - 1, (y * h / sh) | 0);
+    for (let x = 0; x < sw; x++) dst[y * sw + x] = src[sy * w + ((x * w / sw) | 0)];
   }
   return out;
+}
+
+/** Nearest-neighbour upscale of RGBA by k (integer or fractional). */
+export function upscale(rgba, w, h, k) {
+  return resample(rgba, w, h, Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k)));
+}
+
+/** Parse a scale: "150%" → 1.5, "6" → 6. */
+export function parseScale(v) {
+  if (v === undefined || v === null || v === "") return 1;
+  const s = String(v).trim(), n = s.endsWith("%") ? parseFloat(s) / 100 : parseFloat(s);
+  if (!Number.isFinite(n) || n <= 0) throw new Error(`invalid scale: ${v}`);
+  return n;
 }
 
 /** A blank RGBA canvas with helpers to paste images and write labels. */
@@ -217,33 +232,77 @@ export function contactSheet(fx, r, { max = 16, width = 1600, title, zoom } = {}
   return img.png();
 }
 
-/** A sprite sheet (transparent frames in a grid) plus Aseprite-style JSON that most engines import. */
-export function spriteSheet(fx, r, name) {
+/** A sprite sheet (transparent frames in a grid) plus Aseprite-style JSON that most engines import.
+ *  `scale` rescales every frame (1 = native, 1.5 = 150%); the JSON reports the scaled sizes. */
+export function spriteSheet(fx, r, name, { scale = 1 } = {}) {
   const { w, h, frames, fps } = r, n = frames.length;
-  const cols = Math.min(n, Math.max(1, Math.ceil(Math.sqrt((n * h) / w)))), rows = Math.ceil(n / cols);
-  const img = canvas(cols * w, rows * h, [0, 0, 0, 0]);
+  const fw = Math.max(1, Math.round(w * scale)), fh = Math.max(1, Math.round(h * scale));
+  const cols = Math.min(n, Math.max(1, Math.ceil(Math.sqrt((n * fh) / fw)))), rows = Math.ceil(n / cols);
+  const img = canvas(cols * fw, rows * fh, [0, 0, 0, 0]);
   const json = { frames: [], meta: {} };
   frames.forEach((f, i) => {
-    const x = (i % cols) * w, y = Math.floor(i / cols) * h;
-    img.paste(f.clear, w, h, x, y);
+    const x = (i % cols) * fw, y = Math.floor(i / cols) * fh;
+    img.data.set(resample(f.clear, w, h, fw, fh), (y * fw + x) * 4);
     json.frames.push({
-      filename: `${name} ${i}`, frame: { x, y, w, h }, rotated: false, trimmed: false,
-      spriteSourceSize: { x: 0, y: 0, w, h }, sourceSize: { w, h }, duration: Math.round(1000 / fps),
+      filename: `${name} ${i}`, frame: { x, y, w: fw, h: fh }, rotated: false, trimmed: false,
+      spriteSourceSize: { x: 0, y: 0, w: fw, h: fh }, sourceSize: { w: fw, h: fh }, duration: Math.round(1000 / fps),
     });
   });
   const m = fx.meta;
   json.meta = {
     app: "https://github.com/patch-gg/pixelfx", version: "1", image: `${name}.png`, format: "RGBA8888",
-    size: { w: cols * w, h: rows * h }, scale: "1",
+    size: { w: cols * fw, h: rows * fh }, scale: String(+scale.toFixed(4)),
     frameTags: [{ name: name, from: 0, to: n - 1, direction: "forward" }],
-    pixelfx: { id: fx.id, name: m.name, fps, loop: m.loop, frames: n, frameSize: [w, h], pivot: m.origin, columns: cols, ...(fx.mod.act ? { act: actTiming(fx.mod) } : {}) },
+    pixelfx: { id: fx.id, name: m.name, fps, loop: m.loop, frames: n, frameSize: [fw, fh], pivot: m.origin.map((v) => Math.round(v * scale)), columns: cols, ...(fx.mod.act ? { act: actTiming(fx.mod) } : {}) },
   };
   return { png: img.png(), json };
 }
 
+/** Export frames as one multi-frame .aseprite through Tools/PGAT's Aseprite writer.
+ *  Frames come from `r.frames[i].clear` (effect only — no backdrop, no stand-in actor).
+ *  Writes a `unity:pivot` slice at the effect's origin so Aseprite2Unity imports it with the right pivot.
+ *  pgat: path to the PGAT checkout (its Python API is called in a subprocess). */
+export function exportAseprite(fx, r, { file, pgat = join(ROOT, "..", "PGAT"), python = process.env.PYTHON ?? "python", scale = 1, tag = "default" } = {}) {
+  if (!file) throw new Error("exportAseprite: file is required");
+  const { w, h, frames, fps } = r, m = fx.meta;
+  const fw = Math.max(1, Math.round(w * scale)), fh = Math.max(1, Math.round(h * scale));
+  const tmp = mkdtempSync(join(tmpdir(), "pixelfx-ase-"));
+  try {
+    const pngs = frames.map((f, i) => {
+      const p = join(tmp, `f${String(i).padStart(4, "0")}.png`);
+      const c = canvas(fw, fh, [0, 0, 0, 0]);
+      c.data.set(resample(f.clear, w, h, fw, fh));
+      writeFileSync(p, c.png());
+      return p;
+    });
+    const duration = Math.max(1, Math.round(1000 / fps));
+    const repeats = m.loop ? 0 : 1;
+    // unity:pivot takes the slice's center; a 2x2 rect centers on (px, py).
+    const px = Math.min(fw - 1, Math.max(0, Math.round(m.origin[0] * scale)));
+    const py = Math.min(fh - 1, Math.max(0, Math.round(m.origin[1] * scale)));
+    const code = [
+      "import sys",
+      "sys.path.insert(0, sys.argv[1])",
+      "from pathlib import Path",
+      "from aigc import aseprite",
+      "out = Path(sys.argv[2])",
+      "frames = [Path(p) for p in sys.argv[3:]]",
+      `aseprite.make_animated(out, frames, [aseprite.Tag(${JSON.stringify(tag)}, 1, len(frames), ${repeats})], duration_ms=${duration})`,
+      `aseprite.write_slices(out, {"unity:pivot": aseprite.Rect(${px - 1}, ${py - 1}, 2, 2)})`,
+    ].join("\n");
+    mkdirSync(dirname(file), { recursive: true });
+    const res = spawnSync(python, ["-c", code, pgat, file, ...pngs], { encoding: "utf-8" });
+    if (res.error) throw new Error(`python not found: ${python} (${res.error.message})`);
+    if (!existsSync(file)) throw new Error(`aseprite not written: ${(res.stderr || res.stdout || "").trim()}`);
+    return file;
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
 /** Animated preview through ffmpeg (GIF or MP4), scaled k times. Returns false if ffmpeg is missing. */
 export function writeVideo(file, r, k, { loops = 1 } = {}) {
-  const { w, h, frames, fps } = r, W = w * k, H = h * k;
+  const { w, h, frames, fps } = r, W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
   const evenW = W + (W % 2), evenH = H + (H % 2), mp4 = file.endsWith(".mp4");
   const parts = [];
   for (let l = 0; l < loops; l++) for (const f of frames) parts.push(Buffer.from(upscale(f.color, w, h, k).buffer));

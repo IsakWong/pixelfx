@@ -1,6 +1,6 @@
 # Catalog
 
-244 effects in 21 categories. Every one is a file in
+249 effects in 22 categories. Every one is a file in
 `src/fx/<category>/<name>.js`; render any of them with `node tools/render.mjs <id> --gif`.
 
 ## moves
@@ -166,6 +166,7 @@ hit sparks, shockwaves, landings.
 | Hit flash | `impacts/hit-flash` | one-shot 0.5s | 80×64 | The character takes damage: a white frame, then their own colors flushed red and blinking white, cooling off, while comic hit lines jab in at them. |
 | Hit spark | `impacts/hit-spark` | one-shot 0.5s | 136×80 | The everyday hit: a sharp, lopsided cross flare with one long ray along the blow round a white diamond core, then a cone of sparks and hot chips that fall and bounce. |
 | Impact frame | `impacts/impact-frame` | one-shot 0.3s | 320×180 | An anime impact: two frames of white with black burst lines rushing at the hit, two frames inverted, then the lines pull out past the edges and vanish. |
+| Laser impact | `impacts/laser-impact` | loop 0.8s | 56×44 | A laser collision: a crisp white diamond in a short star of taper rays, a hot pulse of light, and a spray of sparks thrown back along the beam. |
 | Parry | `impacts/parry` | one-shot 1s | 200×112 | Two blades clash: their edges flash in an X, a white four-point star rings out, a ring breaks into arcs and a fan of gold sparks sprays up and rains down. |
 | Ricochet | `impacts/ricochet` | one-shot 1.1s | 232×84 | A tracer streaks down onto the floor, glances off with a white-hot star and skips away at an angle, leaving a glowing skid while sparks skitter along the ground. |
 | Shield block | `impacts/shield-block` | one-shot 1.1s | 148×104 | A blow is caught on a half-dome of energy in front of the character: its diamond lattice flashes, a ripple runs over it, sparks glance off, then it blinks out cell by cell. |
@@ -354,6 +355,7 @@ coins, gems, chests, potions.
 | Heart pickup | `pickups/heart-pickup` | loop 1.2s | 56×60 | A plump glossy heart hovering over its shadow beats lub-dub: a big squash and stretch, a smaller echo, light and a thin ring pulsing out, tiny hearts drifting off. |
 | Key glint | `pickups/key-glint` | loop 2s | 72×60 | An ornate silver key hovering and rocking; a glint runs from its bow down the shaft to the teeth and bursts off the tip as falling sparks. |
 | Loot beam | `pickups/loot-beam` | loop 2.4s | 96×176 | A dropped sword in a tall pillar of rarity light: a white core thinning to the sky, rings pulsing across the floor, motes streaming up, a glint racing up the shaft. |
+| Pickup aura | `pickups/pickup-aura` | loop 1.8s | 72×56 | A pool of light on the floor with a clean ring and motes rising and cooling round the empty space an item stands in. |
 | Potion | `pickups/potion` | loop 2.4s | 56×72 | A round glass flask of glowing brew rocks in the air: the brew sloshes behind the rock, bubbles rise and pop, light glows through the glass, wisps curl off the cork. |
 | Power star | `pickups/power-star` | loop 1.6s | 88×84 | A fat bevelled star rocks side to side and swells on each beat, rays of light turning slowly behind it, sparks spinning off its points. |
 | XP orb | `pickups/xp-orb` | loop 1.8s | 72×56 | A small glowing orb races a figure-eight, a comet tail tapering behind it along its path, flecks shed from the tail winking out, its light following it over the floor. |
@@ -393,3 +395,13 @@ slimes, bats, ghosts, frogs.
 | Slime | `critters/slime` | loop 1.8s | 112×88 | A glossy slime hops in place: it squashes to wind up, stretches into the jump, rounds out in the air, splats down flinging droplets that creep back, then wobbles and blinks. |
 | Snake | `critters/snake` | loop 2.4s | 136×56 | A snake slithers along the floor, head raised: humps rise and roll back down its patterned body to the tail, dust puffs where it touches down, its forked tongue flicks. |
 | Wisp | `critters/wisp` | loop 3.2s | 128×104 | A will-o'-the-wisp loops a figure-eight over the floor: a little soul-flame with a face, its flame tail licking up and streaming behind, shedding puffs and sparks. |
+
+## custom
+
+JASA 本地定制：项目尺寸的冰封、纯光效等.
+
+| effect | id | | size | what it does |
+|---|---|---|---|---|
+| Ice block 16 | `custom/ice-block-16` | one-shot 0.9s | 16×16 | A 16x16 block of ice forms, glints, cracks and shatters. No character, meant as a freeze overlay. |
+| Ice block 32 | `custom/ice-block-32` | one-shot 0.9s | 32×32 | A 32x32 block of ice forms, glints, cracks and shatters. No character, meant as a freeze overlay. |
+| Wisp fire 16 | `custom/wisp-fire-16` | loop 1.6s | 16×16 | A 16x16 fire wisp: a soul-flame core with a licking tail and rising embers, looping in place. |

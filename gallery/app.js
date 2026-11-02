@@ -22,7 +22,7 @@ function el(tag, props = {}, kids = []) {
 // ---- a live effect on a canvas, at an integer scale that fits the stage
 class Player {
   constructor(canvas, fx, aspect, pad) {
-    Object.assign(this, { canvas, fx, ctx: canvas.getContext("2d"), opts: {}, flip: false, actor: true, speed: 1, playing: true });
+    Object.assign(this, { canvas, fx, ctx: canvas.getContext("2d"), opts: {}, flip: false, actor: true, speed: 1, playing: true, sheetScale: 1 });
     this.bg = fx.meta.bg;
     this.layout(aspect, pad);
   }
@@ -41,18 +41,39 @@ class Player {
     this.y = acted ? Math.max(oy + 2, this.H - b.y1 - 2) : Math.floor((this.H - h) / 2) + oy;
     this.canvas.width = this.W;
     this.canvas.height = this.H;
-    // shrinking pixel art nearest-neighbour drops whole 1 px lines; smooth it only when it has to shrink
-    const shown = this.canvas.getBoundingClientRect().width * devicePixelRatio;
-    this.canvas.style.imageRendering = shown && shown < this.W ? "auto" : "";
+    // pixel art stays nearest at every size: smoothing hides the pixel grid the zoom is there to show
+    this.canvas.style.imageRendering = "pixelated";
     this.frame = createFrame(this.W, this.H);
     this.img = this.ctx.createImageData(this.W, this.H);
+    // effect layer on its own canvas, so zoom can scale it without touching the backdrop
+    this.eff = document.createElement("canvas");
+    this.eff.width = this.W;
+    this.eff.height = this.H;
+    this.effCtx = this.eff.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
     this.setBg(this.bg);
     this.restart();
   }
   setBg(kind) {
     this.bg = kind;
     this.bgBuf = kind === "none" ? null : backdrop(kind, this.W, this.H, this.y);
+    const empty = createFrame(this.W, this.H), data = new Uint8ClampedArray(this.W * this.H * 4);
+    composite(empty, data, this.bgBuf);
+    this.bgImage = new ImageData(data, this.W, this.H);
     this.dirty = true;
+  }
+  // export scale doubles as the on-stage zoom: the effect layer scales about the stage centre,
+  // the backdrop stays put. 100% is the native size; 200% shows bigger pixels.
+  setScale(s) {
+    this.sheetScale = s;
+    this.dirty = true;
+  }
+  paint(sx = 0, sy = 0) {
+    const s = this.sheetScale, W = this.W, H = this.H, ax = this.x, ay = this.y;
+    this.ctx.putImageData(this.bgImage, 0, 0);
+    this.effCtx.putImageData(this.img, 0, 0);
+    // scale about the effect's origin (its feet/ground point) so the floor stays put
+    this.ctx.drawImage(this.eff, ax - ax * s + sx, ay - ay * s + sy, W * s, H * s);
   }
   // an effect with an act plays it, unless the character is switched off
   get acted() {
@@ -87,10 +108,9 @@ class Player {
     const f = clearFrame(this.frame);
     if (this.acted) {
       this.inst.draw(f);
-      composite(f, this.img.data, this.bgBuf);
+      composite(f, this.img.data, null);
       const [sx, sy] = this.inst.shake;
-      if (sx || sy) this.ctx.clearRect(0, 0, this.W, this.H);
-      this.ctx.putImageData(this.img, sx, sy);
+      this.paint(sx, sy);
       this.dirty = false;
       return;
     }
@@ -98,8 +118,8 @@ class Player {
     const m = this.fx.meta, tt = m.loop ? this.inst.t % m.duration : Math.min(this.inst.t, m.duration);
     if (m.actor && this.actor) drawActor(painterFor(f).place(this.x, this.y, this.flip), this.inst.options.actor ?? stockActor(), actorAlphaOf(this.fx.mod, tt, this.inst.options));
     this.inst.draw(f, "front");
-    composite(f, this.img.data, this.bgBuf);
-    this.ctx.putImageData(this.img, 0, 0);
+    composite(f, this.img.data, null);
+    this.paint();
     this.dirty = false;
   }
 }
@@ -207,6 +227,10 @@ function openDetail(fx) {
   $("#d-actor").hidden = !m.actor;
   $("#d-actor").setAttribute("aria-pressed", "true");
   $("#d-flip").setAttribute("aria-pressed", "false");
+  $("#d-scale").replaceChildren(...[25, 50, 100, 200].map((p) => btn(`${p}%`, () => {
+    detail.setScale(p / 100);
+    if ($("#d-sheet").childElementCount) sheet();
+  }, p === 100, "scale")));
   $("#d-play").setAttribute("aria-pressed", "true");
   $("#d-play").textContent = "pause";
   $("#d-sheet").replaceChildren();
@@ -253,19 +277,24 @@ function code(fx) {
 }
 function sheet() {
   const fx = detail.fx, m = fx.meta, [w, h] = m.size, n = Math.max(1, Math.round(m.duration * m.fps) + (m.loop ? 0 : 1));
+  const s = detail.sheetScale ?? 1, sw = Math.max(1, Math.round(w * s)), sh = Math.max(1, Math.round(h * s));
   const cols = Math.min(n, Math.max(1, Math.ceil(Math.sqrt((n * h) / w)))), rows = Math.ceil(n / cols);
-  const cv = el("canvas", { width: cols * w, height: rows * h }), ctx = cv.getContext("2d");
-  const frame = createFrame(w, h), img = ctx.createImageData(w, h);
+  const cv = el("canvas", { width: cols * sw, height: rows * sh }), ctx = cv.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  const tmp = el("canvas", { width: w, height: h }), tctx = tmp.getContext("2d");
+  const frame = createFrame(w, h), img = tctx.createImageData(w, h);
   const inst = createFx(fx.mod, { x: m.origin[0], y: m.origin[1], ...detail.opts, flip: detail.flip });
   for (let i = 0; i < n; i++) {
     if (i) inst.update(1 / m.fps);
     inst.draw(clearFrame(frame));
     composite(frame, img.data, null);
-    ctx.putImageData(img, (i % cols) * w, Math.floor(i / cols) * h);
+    tctx.putImageData(img, 0, 0);
+    ctx.drawImage(tmp, 0, 0, w, h, (i % cols) * sw, Math.floor(i / cols) * sh, sw, sh);
   }
-  const k = Math.max(1, Math.min(4, Math.floor(1100 / (cols * w))));
-  const pic = el("img", { src: cv.toDataURL("image/png"), alt: `${m.name} sprite sheet`, width: cols * w * k, height: rows * h * k });
-  $("#d-sheet").replaceChildren(pic, el("p", { textContent: `${n} frames of ${w} × ${h} px, ${cols} across, ${m.fps} fps, ${m.loop ? "loops" : "plays once"}. Save the image, or run: node tools/render.mjs ${fx.id} --sheet` }));
+  const k = Math.max(1, Math.min(4, Math.floor(1100 / (cols * sw))));
+  const pic = el("img", { src: cv.toDataURL("image/png"), alt: `${m.name} sprite sheet`, width: cols * sw * k, height: rows * sh * k });
+  const pct = s === 1 ? "" : ` (${Math.round(s * 100)}%)`, flag = s === 1 ? "" : ` --scale ${Math.round(s * 100)}%`;
+  $("#d-sheet").replaceChildren(pic, el("p", { textContent: `${n} frames of ${sw} × ${sh} px${pct}, ${cols} across, ${m.fps} fps, ${m.loop ? "loops" : "plays once"}. Save the image, or run: node tools/render.mjs ${fx.id} --sheet${flag}` }));
 }
 function wireDetail() {
   const d = $("#detail");

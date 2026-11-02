@@ -17,9 +17,10 @@ export const meta = {
 };
 
 const D = meta.duration, SWARM = new Swarm();
+const AMP_X = 0, AMP_Y = 0;
 function at(t, hover) {
   const a = (t / D) * TAU;
-  return { x: 34 * Math.sin(a), y: -hover - 10 * Math.sin(2 * a), vx: ((34 * TAU) / D) * Math.cos(a), vy: ((-20 * TAU) / D) * Math.cos(2 * a) };
+  return { x: AMP_X * Math.sin(a), y: -hover - AMP_Y * Math.sin(2 * a), vx: ((AMP_X * TAU) / D) * Math.cos(a), vy: ((-2 * AMP_Y * TAU) / D) * Math.cos(2 * a) };
 }
 
 export function draw(p, time, o) {

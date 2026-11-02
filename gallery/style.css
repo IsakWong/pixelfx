@@ -140,7 +140,7 @@ main { max-width: 1240px; margin: 0 auto; }
   gap: 28px;
   align-content: start;
 }
-.sheet .big { background: var(--stage); aspect-ratio: 16 / 10; position: relative; }
+.sheet .big { background: var(--stage); aspect-ratio: 16 / 10; position: relative; overflow: hidden; }
 .close {
   position: absolute;
   top: 10px;
@@ -181,7 +181,7 @@ pre {
 }
 .code-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font: 400 11px/1 var(--mono); color: var(--quiet); letter-spacing: 0.04em; }
 .sheetout { grid-column: 1 / -1; }
-.sheetout img { image-rendering: pixelated; max-width: 100%; background: repeating-conic-gradient(#1a1a1a 0% 25%, #111 0% 50%) 0 0 / 16px 16px; display: block; }
+.sheetout img { image-rendering: pixelated; max-width: 100%; height: auto; background: repeating-conic-gradient(#1a1a1a 0% 25%, #111 0% 50%) 0 0 / 16px 16px; display: block; }
 .sheetout p { font: 400 12px/1.4 var(--mono); color: var(--quiet); margin: 8px 0 0; }
 
 @media (max-width: 900px) {

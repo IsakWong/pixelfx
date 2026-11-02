@@ -12,7 +12,7 @@ export const meta = {
   fps: 30,
   bg: "ground",
   actor: 2,
-  options: { palette: ["#151a3d", "#212f6b", "#2c58aa", "#3a8bd8", "#62c8f4", "#a6ecff", "#dcfbff", "#ffffff"], seed: 4 },
+  options: { palette: ["#151a3d", "#212f6b", "#2c58aa", "#3a8bd8", "#62c8f4", "#a6ecff", "#dcfbff", "#ffffff"], seed: 4, item: true },
 };
 
 const STIFF = { turn: 0.9, crouch: 1, fx: -6, fy: -15, bx: 7, by: -15, ffx: -2, fbx: 3 };
@@ -104,8 +104,30 @@ export function drawBack(p, t, o) {
   frost(p, C, t, reach);
 }
 
+// item: false —— 不画角色，只保留地面冰霜、霜簇、飘雪和冷光，可叠在项目自己的角色上。
+function overlay(p, C, t, o) {
+  const ph = since(t);
+  // 地面冰晶：几根稀疏的 1-3 px 小刺，别连成一条白带
+  for (let i = 0; i < 5; i++) {
+    const x = Math.round(-12 + i * 6 + rand(i, o.seed, 1) * 2);
+    const h = 1 + Math.round(rand(i, o.seed, 2) * 2);
+    for (let j = 0; j < h; j++) p.px(x, -j, j === h - 1 ? WHITE : C[5]);
+  }
+  // 飘雪
+  cycle(t, D, 9, o.seed + 2, (r) => r.range(1.2, 1.8), (age, life, r) => {
+    const x = r.range(-14, 14) + Math.sin(age * 3 + r.next() * TAU) * 1.5, y = -16 + age * 14;
+    if (y > 2) return;
+    p.dot(x, y, r.next() < 0.5 ? WHITE : C[6], Math.min(1, age * 4));
+  });
+  // 冷光
+  p.glow(0, -4, 24, C[4], 0.2 + 0.12 * Math.exp(-ph / 0.2));
+  p.glow(0, 0, 14, C[5], 0.1);
+}
+
 export function draw(p, t, o) {
-  const C = fit(o.palette, 8), a = o.actor, S = shape(a), H = S.h, P = plan(a, o.seed), dx = shake(t), ph = since(t);
+  const C = fit(o.palette, 8);
+  if (o.item === false) return overlay(p, C, t, o);
+  const a = o.actor, S = shape(a), H = S.h, P = plan(a, o.seed), dx = shake(t), ph = since(t);
   const X = (mx) => a.x + mx + dx, Y = (my) => a.y + my;
   // the body, chilled: its colours pulled toward ice; the rim frosted and lit
   for (const [mx, my] of S.body) {

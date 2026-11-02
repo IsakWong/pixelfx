@@ -22,4 +22,5 @@ export const categories = [
   { id: "pickups", name: "pickups", blurb: "coins, gems, chests, potions" },
   { id: "transitions", name: "transitions", blurb: "wipes, irises, dissolves" },
   { id: "critters", name: "critters", blurb: "slimes, bats, ghosts, frogs" },
+  { id: "custom", name: "custom", blurb: "JASA 本地定制：项目尺寸的冰封、纯光效等" },
 ];
