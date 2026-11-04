@@ -3,3 +3,5 @@ dist/
 records/
 sheets/
 .DS_Store
+.claude/
+production/
