@@ -252,7 +252,12 @@ import * as custom_ice_disc from "./custom/ice-disc.js";
 import * as custom_ice_pillar from "./custom/ice-pillar.js";
 import * as custom_ice_pillar_break from "./custom/ice-pillar-break.js";
 import * as custom_ice_pillar_rise from "./custom/ice-pillar-rise.js";
+import * as custom_item_idle_beacon_24 from "./custom/item-idle-beacon-24.js";
+import * as custom_item_idle_orbit_40 from "./custom/item-idle-orbit-40.js";
+import * as custom_item_idle_ring_32 from "./custom/item-idle-ring-32.js";
 import * as custom_laser_impact from "./custom/laser-impact.js";
+import * as custom_laser_source from "./custom/laser-source.js";
+import * as custom_hurt_hit_24 from "./custom/hurt-hit-24.js";
 import * as custom_rank_up from "./custom/rank-up.js";
 import * as custom_reward_gain from "./custom/reward-gain.js";
 import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
@@ -512,7 +517,12 @@ export const effects = {
   "custom/ice-pillar": custom_ice_pillar,
   "custom/ice-pillar-break": custom_ice_pillar_break,
   "custom/ice-pillar-rise": custom_ice_pillar_rise,
+  "custom/item-idle-beacon-24": custom_item_idle_beacon_24,
+  "custom/item-idle-orbit-40": custom_item_idle_orbit_40,
+  "custom/item-idle-ring-32": custom_item_idle_ring_32,
   "custom/laser-impact": custom_laser_impact,
+  "custom/laser-source": custom_laser_source,
+  "custom/hurt-hit-24": custom_hurt_hit_24,
   "custom/rank-up": custom_rank_up,
   "custom/reward-gain": custom_reward_gain,
   "custom/wisp-fire-16": custom_wisp_fire_16,
