@@ -234,6 +234,9 @@ function openDetail(fx) {
   $("#d-play").setAttribute("aria-pressed", "true");
   $("#d-play").textContent = "pause";
   $("#d-sheet").replaceChildren();
+  $("#d-ase-out").textContent = "";
+  $("#d-ase").textContent = "aseprite → jasa";
+  $("#d-ase").disabled = false;
   code(fx);
   d.showModal();
   d.scrollTop = 0;
@@ -331,6 +334,25 @@ function wireDetail() {
     code(detail.fx);
   });
   $("#d-make").addEventListener("click", sheet);
+  // aseprite export runs on the local server (it has to spawn Aseprite); a static host has no endpoint
+  $("#d-ase").addEventListener("click", async (e) => {
+    const btn = e.target, out = $("#d-ase-out"), fx = detail.fx;
+    const scale = Math.max(1, Math.min(4, Math.round(detail.sheetScale ?? 1)));
+    btn.disabled = true;
+    btn.textContent = "exporting…";
+    out.textContent = "";
+    try {
+      const r = await fetch("/api/jasa", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: fx.id, scale }) });
+      const j = await r.json().catch(() => ({ ok: false, output: `HTTP ${r.status}` }));
+      out.textContent = j.output || (j.ok ? "done" : "failed");
+      btn.textContent = j.ok ? "done" : "aseprite → jasa";
+    } catch {
+      out.textContent = "needs `node tools/serve.mjs`";
+      btn.textContent = "aseprite → jasa";
+    } finally {
+      btn.disabled = false;
+    }
+  });
   $("#d-copy").addEventListener("click", async (e) => {
     const text = $("#d-code").textContent;
     try {

@@ -160,6 +160,7 @@ main { max-width: 1240px; margin: 0 auto; }
 .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .row label { font: 400 11px/1 var(--mono); color: var(--quiet); width: 64px; letter-spacing: 0.04em; }
+#d-ase-out { white-space: pre-line; font: 400 10px/1.5 var(--mono); color: var(--quiet); max-width: 100%; }
 .btn {
   border: 1px solid var(--line);
   background: none;
