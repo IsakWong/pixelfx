@@ -246,6 +246,7 @@ import * as critters_slime from "./critters/slime.js";
 import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
 import * as custom_chill_snow from "./custom/chill-snow.js";
+import * as custom_burning_buff from "./custom/burning-buff.js";
 import * as custom_ice_block_16 from "./custom/ice-block-16.js";
 import * as custom_ice_block_32 from "./custom/ice-block-32.js";
 import * as custom_ice_disc from "./custom/ice-disc.js";
@@ -260,6 +261,7 @@ import * as custom_laser_source from "./custom/laser-source.js";
 import * as custom_hurt_hit_24 from "./custom/hurt-hit-24.js";
 import * as custom_rank_up from "./custom/rank-up.js";
 import * as custom_reward_gain from "./custom/reward-gain.js";
+import * as custom_topdown_fire_burst from "./custom/topdown-fire-burst.js";
 import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
 
 export { categories } from "./categories.js";
@@ -511,6 +513,7 @@ export const effects = {
   "critters/snake": critters_snake,
   "critters/wisp": critters_wisp,
   "custom/chill-snow": custom_chill_snow,
+  "custom/burning-buff": custom_burning_buff,
   "custom/ice-block-16": custom_ice_block_16,
   "custom/ice-block-32": custom_ice_block_32,
   "custom/ice-disc": custom_ice_disc,
@@ -525,5 +528,6 @@ export const effects = {
   "custom/hurt-hit-24": custom_hurt_hit_24,
   "custom/rank-up": custom_rank_up,
   "custom/reward-gain": custom_reward_gain,
+  "custom/topdown-fire-burst": custom_topdown_fire_burst,
   "custom/wisp-fire-16": custom_wisp_fire_16,
 };

@@ -1,7 +1,7 @@
 // 满层冰冻（StateFrozen）的持续表现：下半身被锥形冰柱封住，上尖下宽、多面切角。
 // 纯效果（loop）：真半透明冰体、内部冷光呼吸、一道窄高光自下而上扫过、边缘霜点闪烁。
 // 冰体逐像素 blend（shade 的 alpha 是抖动，会把内部读成棋盘格）。
-import { fit, clamp, rand, crystal, sparkle, TAU, WHITE } from "../../core/index.js";
+import { fit, clamp, rand, mix, crystal, sparkle, TAU, WHITE } from "../../core/index.js";
 import { H, HW, halfAt } from "./_ice-pillar-shape.js";
 
 export const meta = {
@@ -27,10 +27,32 @@ const CRACKS = [
   [[1, -3], [-2, -9]],
 ];
 
+// 3/4 俯视的地面接触：柱脚落在一个压扁的椭圆霜环上。前后两半分开画，
+// 后半在冰柱之前、前半在冰柱之后，柱脚就"踩"进地面而不是贴在画面平面上。
+const PATCH_RX = 21, PATCH_RY = 5.5;
+function frostPatch(p, C, front, pulse) {
+  for (let y = Math.floor(-PATCH_RY); y <= PATCH_RY; y++) {
+    for (let x = Math.floor(-PATCH_RX); x <= PATCH_RX; x++) {
+      const d = Math.hypot((x + 0.5) / PATCH_RX, (y + 0.5) / PATCH_RY);
+      if (d > 1 || (front ? y < 0 : y >= 0)) continue;
+      const rim = d > 0.78;
+      const c = rim ? (front ? C[5] : C[3]) : front ? C[2] : C[1];
+      const a = rim ? (front ? 0.5 : 0.28) + 0.07 * pulse : front ? 0.3 : 0.2;
+      p.blend(x, y, c, a);
+    }
+  }
+}
+
 export function draw(p, t, o) {
   const C = fit(o.palette, 8), D = meta.duration;
   const u = (t % D) / D;
   const breath = 0.5 + 0.5 * Math.sin(u * TAU);
+  const CD = C.map((c) => mix(c, C[0], 0.3)); // 后排冰刺压暗
+
+  // 地面霜环后半 + 后排冰刺（在冰柱之前画）
+  frostPatch(p, C, false, breath);
+  crystal(p, -9, -2, 5, 3, -0.25, CD, { glint: -1 });
+  crystal(p, 8, -2, 4, 3, 0.2, CD, { glint: -1 });
 
   // 冰柱主体：逐像素真半透明（alpha 混合，不是抖动），角色的轮廓能透出来
   const glintY = -H - 4 + u * (H + 8);
@@ -99,11 +121,12 @@ export function draw(p, t, o) {
     }
   }
 
-  // 底部向两侧斜出的冰刺，让柱脚"长"进地面
+  // 地面霜环前半 + 前排冰刺：压在柱脚上，让柱子和地面咬合
+  frostPatch(p, C, true, breath);
   crystal(p, -HW + 1, 0, 8, 4, -0.55, C, { glint: 0.42 });
   crystal(p, HW - 2, 0, 10, 5, 0.5, C, { glint: 0.6 });
-  crystal(p, -HW + 6, 0, 5, 3, -0.25, C, { glint: -1 });
-  crystal(p, HW - 7, 0, 4, 3, 0.2, C, { glint: -1 });
+  crystal(p, -5, 2, 4, 3, -0.2, C, { glint: -1 });
+  crystal(p, 6, 3, 5, 3, 0.25, C, { glint: -1 });
 
   // 轮廓霜点：左右交替，闪一下再暗下去
   for (let i = 0; i < 8; i++) {
