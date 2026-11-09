@@ -247,6 +247,7 @@ import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
 import * as custom_chill_snow from "./custom/chill-snow.js";
 import * as custom_burning_buff from "./custom/burning-buff.js";
+import * as custom_burning_element from "./custom/burning-element.js";
 import * as custom_ice_block_16 from "./custom/ice-block-16.js";
 import * as custom_ice_block_32 from "./custom/ice-block-32.js";
 import * as custom_ice_disc from "./custom/ice-disc.js";
@@ -514,6 +515,7 @@ export const effects = {
   "critters/wisp": critters_wisp,
   "custom/chill-snow": custom_chill_snow,
   "custom/burning-buff": custom_burning_buff,
+  "custom/burning-element": custom_burning_element,
   "custom/ice-block-16": custom_ice_block_16,
   "custom/ice-block-32": custom_ice_block_32,
   "custom/ice-disc": custom_ice_disc,

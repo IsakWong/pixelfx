@@ -169,6 +169,31 @@ export function parseScale(v) {
   return n;
 }
 
+/** Parse and validate an fps. Aseprite frame durations are whole milliseconds, so above 240 fps (≈4 ms/frame)
+ *  the distribution below starts losing frames — treat that as a mistake rather than silently dropping them. */
+export function parseFps(v, fallback) {
+  if (v === undefined || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 1 || n > 240) throw new Error(`invalid fps: ${v} (expected 1-240)`);
+  return n;
+}
+
+/**
+ * Whole-millisecond durations for `n` frames at `fps`, using cumulative rounding so the total is as close to
+ * n/fps as integer milliseconds allow. A flat `round(1000/fps)` drifts: 60 fps becomes 17 ms every frame,
+ * i.e. 58.8 fps. Here it alternates 17/17/16 and averages 16.667 ms.
+ */
+export function frameDurations(n, fps) {
+  const out = new Array(n);
+  let prev = 0;
+  for (let i = 1; i <= n; i++) {
+    const end = Math.round((i * 1000) / fps);
+    out[i - 1] = Math.max(1, end - prev);
+    prev = end;
+  }
+  return out;
+}
+
 /** A blank RGBA canvas with helpers to paste images and write labels. */
 export function canvas(w, h, fill = [12, 11, 16, 255]) {
   const data = new Uint8ClampedArray(w * h * 4);
@@ -236,16 +261,17 @@ export function contactSheet(fx, r, { max = 16, width = 1600, title, zoom } = {}
  *  `scale` rescales every frame (1 = native, 1.5 = 150%); the JSON reports the scaled sizes. */
 export function spriteSheet(fx, r, name, { scale = 1 } = {}) {
   const { w, h, frames, fps } = r, n = frames.length;
+  const durations = frameDurations(n, fps);
   const fw = Math.max(1, Math.round(w * scale)), fh = Math.max(1, Math.round(h * scale));
   const cols = Math.min(n, Math.max(1, Math.ceil(Math.sqrt((n * fh) / fw)))), rows = Math.ceil(n / cols);
   const img = canvas(cols * fw, rows * fh, [0, 0, 0, 0]);
   const json = { frames: [], meta: {} };
   frames.forEach((f, i) => {
     const x = (i % cols) * fw, y = Math.floor(i / cols) * fh;
-    img.data.set(resample(f.clear, w, h, fw, fh), (y * fw + x) * 4);
+    img.paste(resample(f.clear, w, h, fw, fh), fw, fh, x, y);
     json.frames.push({
       filename: `${name} ${i}`, frame: { x, y, w: fw, h: fh }, rotated: false, trimmed: false,
-      spriteSourceSize: { x: 0, y: 0, w: fw, h: fh }, sourceSize: { w: fw, h: fh }, duration: Math.round(1000 / fps),
+      spriteSourceSize: { x: 0, y: 0, w: fw, h: fh }, sourceSize: { w: fw, h: fh }, duration: durations[i],
     });
   });
   const m = fx.meta;
@@ -275,7 +301,7 @@ export function exportAseprite(fx, r, { file, pgat = join(ROOT, "..", "PGAT"), p
       writeFileSync(p, c.png());
       return p;
     });
-    const duration = Math.max(1, Math.round(1000 / fps));
+    const durations = frameDurations(frames.length, fps);
     const repeats = m.loop ? 0 : 1;
     // unity:pivot takes the slice's center; a 2x2 rect centers on (px, py).
     const px = Math.min(fw - 1, Math.max(0, Math.round(m.origin[0] * scale)));
@@ -287,7 +313,7 @@ export function exportAseprite(fx, r, { file, pgat = join(ROOT, "..", "PGAT"), p
       "from aigc import aseprite",
       "out = Path(sys.argv[2])",
       "frames = [Path(p) for p in sys.argv[3:]]",
-      `aseprite.make_animated(out, frames, [aseprite.Tag(${JSON.stringify(tag)}, 1, len(frames), ${repeats})], duration_ms=${duration})`,
+      `aseprite.make_animated(out, frames, [aseprite.Tag(${JSON.stringify(tag)}, 1, len(frames), ${repeats})], durations_ms=[${durations.join(", ")}])`,
       `aseprite.write_slices(out, {"unity:pivot": aseprite.Rect(${px - 1}, ${py - 1}, 2, 2)})`,
     ].join("\n");
     mkdirSync(dirname(file), { recursive: true });
