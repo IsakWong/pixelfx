@@ -264,6 +264,8 @@ import * as custom_rank_up from "./custom/rank-up.js";
 import * as custom_reward_gain from "./custom/reward-gain.js";
 import * as custom_topdown_fire_burst from "./custom/topdown-fire-burst.js";
 import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
+import * as custom_wand_muzzle from "./custom/wand-muzzle.js";
+import * as custom_barrage_muzzle from "./custom/barrage-muzzle.js";
 
 export { categories } from "./categories.js";
 
@@ -532,4 +534,6 @@ export const effects = {
   "custom/reward-gain": custom_reward_gain,
   "custom/topdown-fire-burst": custom_topdown_fire_burst,
   "custom/wisp-fire-16": custom_wisp_fire_16,
+  "custom/wand-muzzle": custom_wand_muzzle,
+  "custom/barrage-muzzle": custom_barrage_muzzle,
 };
