@@ -1,23 +1,40 @@
 #!/usr/bin/env node
 // 按 JASA 的导入规则渲染 pixelfx 效果：
-//   60 fps（AsepriteImportConfig.DefaultFrameRate）、只允许整数倍缩放（16 PPU 像素对齐）、
+//   默认帧率读 AsepriteImportConfig.DefaultFrameRate（当前 60），只允许整数倍缩放（16 PPU 像素对齐），
 //   直接产出 Assets/JASA/Content/特效/VFX_<name>.aseprite。
 //
 //   node tools/jasa.mjs fire/torch
 //   node tools/jasa.mjs "ice/*" --scale 2
-//   node tools/jasa.mjs fire/torch --out /tmp/vfx
+//   node tools/jasa.mjs fire/torch --fps 30 --out /tmp/vfx
 //
-// 选项：--scale N（正整数）--out DIR --pgat DIR --python EXE
+// 选项：--fps N（1-240）--scale N（正整数）--out DIR --pgat DIR --python EXE
 //
 // 产物带 `default` tag（meta.loop 时为循环）与 `unity:pivot` slice，
-// VfxAsepriteProcessor 导入后生成 JasaVfx 预制体。
+// VfxAsepriteProcessor 导入后生成 JasaVfx 预制体。每帧时长按目标 fps 逐帧分配
+// 整数毫秒（如 60fps 用 17/17/16 交替），避免统一取整带来的帧率漂移。
 
+import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { ROOT, resolveIds, loadEffect, renderFrames, exportAseprite, parseScale } from "./lib/fxlib.mjs";
+import { ROOT, resolveIds, loadEffect, renderFrames, exportAseprite, parseScale, parseFps } from "./lib/fxlib.mjs";
 
-const JASA_FPS = 60;   // Assets/JASA/Boot/Config/AsepriteImportConfig.asset
+const FALLBACK_FPS = 60;   // AsepriteImportConfig.asset 缺失时的兜底
 const JASA_PPU = 16;
 const DEFAULT_OUT = resolve(ROOT, "../../Assets/JASA/Content/特效");
+const IMPORT_CONFIG = resolve(ROOT, "../../Assets/JASA/Boot/Config/AsepriteImportConfig.asset");
+
+/** 读 JASA 的全局导入帧率，保证工具与 Unity 侧配置不各写一份 60。 */
+function defaultFps() {
+  try {
+    const m = readFileSync(IMPORT_CONFIG, "utf8").match(/^\s*DefaultFrameRate:\s*([\d.]+)/m);
+    if (m) {
+      const n = parseFloat(m[1]);
+      if (Number.isFinite(n) && n >= 1 && n <= 240) return n;
+    }
+  } catch {
+    // 配置不在（例如单独用 pixelfx 仓库）时用兜底值
+  }
+  return FALLBACK_FPS;
+}
 
 /** Union of non-transparent pixels across every frame, in canvas pixels. */
 function contentBounds(frames, w, h) {
@@ -45,13 +62,20 @@ for (let i = 0; i < args.length; i++) {
   else flags[a.slice(2)] = args[++i];
 }
 if (!ids.length) {
-  console.error("usage: node tools/jasa.mjs <id|category|pattern>... [--scale N] [--out DIR]");
+  console.error("usage: node tools/jasa.mjs <id|category|pattern>... [--fps N] [--scale N] [--out DIR]");
   process.exit(1);
 }
 
 const scale = flags.scale === undefined ? 1 : parseScale(flags.scale);
 if (!Number.isInteger(scale) || scale < 1) {
   console.error(`JASA 只允许整数倍缩放（1×、2×、3×…），收到 --scale ${flags.scale}`);
+  process.exit(1);
+}
+let fps;
+try {
+  fps = parseFps(flags.fps, defaultFps());
+} catch (e) {
+  console.error(`${e.message}（JASA 默认 ${defaultFps()} fps）`);
   process.exit(1);
 }
 const out = flags.out ? resolve(flags.out) : DEFAULT_OUT;
@@ -66,7 +90,7 @@ for (const id of resolveIds(ids)) {
     if (ox < 0 || ox >= w || oy < 0 || oy >= h)
       throw new Error(`origin 不在画布内：${fx.meta.origin} / ${w}x${h}`);
 
-    const r = renderFrames(fx, { fps: JASA_FPS, actor: false, edgeFade: false });
+    const r = renderFrames(fx, { fps, actor: false, edgeFade: false });
     const name = id.split("/")[1];
     const file = exportAseprite(fx, r, {
       file: join(out, `VFX_${name}.aseprite`),
@@ -79,7 +103,7 @@ for (const id of resolveIds(ids)) {
     const notes = [];
     if (fx.meta.loop)
       notes.push("循环特效：VfxAsepriteProcessor 写 Lifetime=0 且循环不触发 OnClipEnd，需运行时 SetLifetime");
-    console.log(`${id}  ${r.n} frames @${JASA_FPS}fps  ->  ${file}`);
+    console.log(`${id}  ${r.n} frames @${fps}fps  ->  ${file}`);
     // size 是画布，不是内容：世界尺寸要按内容包围盒看，锚点由 unity:pivot 决定。
     console.log(`  画布 ${w * scale}×${h * scale} px = ${world}`);
     const b = contentBounds(r.frames, w, h);

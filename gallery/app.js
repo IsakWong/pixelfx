@@ -22,7 +22,7 @@ function el(tag, props = {}, kids = []) {
 // ---- a live effect on a canvas, at an integer scale that fits the stage
 class Player {
   constructor(canvas, fx, aspect, pad) {
-    Object.assign(this, { canvas, fx, ctx: canvas.getContext("2d"), opts: {}, flip: false, actor: true, speed: 1, playing: true, sheetScale: 1 });
+    Object.assign(this, { canvas, fx, ctx: canvas.getContext("2d"), opts: {}, flip: false, actor: true, speed: 1, fps: fx.meta.fps, playing: true, sheetScale: 1 });
     this.bg = fx.meta.bg;
     this.layout(aspect, pad);
   }
@@ -86,7 +86,7 @@ class Player {
     this.dirty = true;
   }
   tick(dt) {
-    const m = this.fx.meta, step = 1 / m.fps;
+    const m = this.fx.meta, step = 1 / this.fps;
     if (this.playing) this.acc = Math.min(this.acc + dt * this.speed, 0.25);
     let moved = false;
     while (this.acc >= step) {
@@ -124,6 +124,21 @@ class Player {
   }
 }
 
+// ---- deleting your own effects: only custom/ tiles, only from the local server (the static build has no endpoint)
+let canDelete = false;
+const deletable = (fx) => canDelete && fx.id.startsWith("custom/");
+async function remove(fx) {
+  if (!confirm(`Delete ${fx.id}?\n\nThis removes src/fx/${fx.id}.js and rebuilds the registry. It cannot be undone.`)) return;
+  try {
+    const r = await fetch(`/api/fx/${fx.id}`, { method: "DELETE" });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`);
+    location.reload();
+  } catch (e) {
+    alert(`Delete failed: ${e.message}\n\nRight-click delete is only available under the local node tools/serve.mjs.`);
+  }
+}
+
 // ---- tiles
 const tiles = [];
 const sections = [];
@@ -148,6 +163,11 @@ function build() {
       fig.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), openDetail(fx)));
       fig.addEventListener("pointerenter", () => (t.hover = true));
       fig.addEventListener("pointerleave", () => (t.hover = false));
+      fig.addEventListener("contextmenu", (e) => {
+        if (!deletable(fx)) return;
+        e.preventDefault();
+        remove(fx);
+      });
       grid.append(fig);
       tiles.push(t);
     }
@@ -214,13 +234,15 @@ function openDetail(fx) {
   $("#d-name").textContent = m.name;
   $("#d-id").textContent = fx.id;
   $("#d-desc").textContent = m.desc;
-  const frames = Math.round(m.duration * m.fps) + (m.loop ? 0 : 1);
-  $("#d-facts").replaceChildren(
-    ...[["kind", m.loop ? "loop" : "one-shot"], ["length", `${+m.duration.toFixed(2)} s, ${frames} frames at ${m.fps} fps`], ...(fx.mod.act ? [["acted", actFacts(fx.mod)]] : []), ["canvas", `${m.size[0]} × ${m.size[1]} px`], ["tags", m.tags.join(", ")]].flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })]),
-  );
+  facts(fx);
   // controls
   $("#d-bg").replaceChildren(...BACKDROPS.concat("none").map((b) => btn(b, () => detail.setBg(b), b === m.bg, "bg")));
   $("#d-speed").replaceChildren(...[0.25, 0.5, 1].map((s) => btn(`${s}×`, () => (detail.speed = s), s === 1, "speed")));
+  $("#d-fps").replaceChildren(
+    btn(`own (${m.fps})`, () => setFps(m.fps), true, "fps"),
+    ...[8, 12, 15, 24, 30, 50, 60].filter((v) => v !== m.fps).map((v) => btn(String(v), () => setFps(v), false, "fps")),
+  );
+  $("#d-fps-custom").value = "";
   const pal = $("#d-pal");
   pal.replaceChildren(el("option", { value: "", textContent: "its own" }), ...Object.keys(PAL).map((k) => el("option", { value: k, textContent: k })));
   pal.value = "";
@@ -249,6 +271,22 @@ function actFacts(mod) {
   if (hits.length) parts.push(`${hits.length === 1 ? `${Math.round(hits[0].stop * 1000)} ms freeze` : `${hits.length} freezes`} at ${hits[0].t.toFixed(2)} s`);
   if (!mod.meta.loop && end > 0.02) parts.push(`${end.toFixed(2)} s recovery`);
   return parts.join(", ") || "the body moves with it";
+}
+// the facts panel, with the frame count for the fps currently being previewed
+function facts(fx) {
+  const m = fx.meta, fps = detail?.fps ?? m.fps;
+  const frames = Math.max(1, Math.round(m.duration * fps)) + (m.loop ? 0 : 1);
+  $("#d-facts").replaceChildren(
+    ...[["kind", m.loop ? "loop" : "one-shot"], ["length", `${+m.duration.toFixed(2)} s, ${frames} frames at ${fps} fps`], ...(fx.mod.act ? [["acted", actFacts(fx.mod)]] : []), ["canvas", `${m.size[0]} × ${m.size[1]} px`], ["tags", m.tags.join(", ")]].flatMap(([k, v]) => [el("dt", { textContent: k }), el("dd", { textContent: v })]),
+  );
+}
+// changing fps resamples the simulation: same duration, fewer or more frames
+function setFps(fps, fromCustom = false) {
+  detail.fps = fps;
+  detail.restart();
+  facts(detail.fx);
+  if (!fromCustom) $("#d-fps-custom").value = "";
+  if ($("#d-sheet").childElementCount) sheet();
 }
 function btn(label, fn, on, group) {
   const b = el("button", { className: "btn", type: "button", textContent: label });
@@ -279,7 +317,7 @@ function code(fx) {
   $("#d-src").href = `${REPO}/blob/main/src/fx/${fx.id}.js`;
 }
 function sheet() {
-  const fx = detail.fx, m = fx.meta, [w, h] = m.size, n = Math.max(1, Math.round(m.duration * m.fps) + (m.loop ? 0 : 1));
+  const fx = detail.fx, m = fx.meta, [w, h] = m.size, fps = detail.fps, n = Math.max(1, Math.round(m.duration * fps) + (m.loop ? 0 : 1));
   const s = detail.sheetScale ?? 1, sw = Math.max(1, Math.round(w * s)), sh = Math.max(1, Math.round(h * s));
   const cols = Math.min(n, Math.max(1, Math.ceil(Math.sqrt((n * h) / w)))), rows = Math.ceil(n / cols);
   const cv = el("canvas", { width: cols * sw, height: rows * sh }), ctx = cv.getContext("2d");
@@ -288,7 +326,7 @@ function sheet() {
   const frame = createFrame(w, h), img = tctx.createImageData(w, h);
   const inst = createFx(fx.mod, { x: m.origin[0], y: m.origin[1], ...detail.opts, flip: detail.flip });
   for (let i = 0; i < n; i++) {
-    if (i) inst.update(1 / m.fps);
+    if (i) inst.update(1 / fps);
     inst.draw(clearFrame(frame));
     composite(frame, img.data, null);
     tctx.putImageData(img, 0, 0);
@@ -296,8 +334,8 @@ function sheet() {
   }
   const k = Math.max(1, Math.min(4, Math.floor(1100 / (cols * sw))));
   const pic = el("img", { src: cv.toDataURL("image/png"), alt: `${m.name} sprite sheet`, width: cols * sw * k, height: rows * sh * k });
-  const pct = s === 1 ? "" : ` (${Math.round(s * 100)}%)`, flag = s === 1 ? "" : ` --scale ${Math.round(s * 100)}%`;
-  $("#d-sheet").replaceChildren(pic, el("p", { textContent: `${n} frames of ${sw} × ${sh} px${pct}, ${cols} across, ${m.fps} fps, ${m.loop ? "loops" : "plays once"}. Save the image, or run: node tools/render.mjs ${fx.id} --sheet${flag}` }));
+  const pct = s === 1 ? "" : ` (${Math.round(s * 100)}%)`, flag = s === 1 ? "" : ` --scale ${Math.round(s * 100)}%`, fpsFlag = fps === m.fps ? "" : ` --fps ${fps}`;
+  $("#d-sheet").replaceChildren(pic, el("p", { textContent: `${n} frames of ${sw} × ${sh} px${pct}, ${cols} across, ${fps} fps, ${m.loop ? "loops" : "plays once"}. Save the image, or run: node tools/render.mjs ${fx.id} --sheet${flag}${fpsFlag}` }));
 }
 function wireDetail() {
   const d = $("#detail");
@@ -332,6 +370,16 @@ function wireDetail() {
     else delete detail.opts.palette;
     detail.restart();
     code(detail.fx);
+  });
+  $("#d-fps-custom").addEventListener("change", (e) => {
+    const v = Math.round(Number(e.target.value));
+    if (!Number.isFinite(v) || v < 1 || v > 240) {
+      e.target.value = "";
+      e.target.placeholder = "1-240";
+      return;
+    }
+    $("#d-fps").querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", "false"));
+    setFps(v, true);
   });
   $("#d-make").addEventListener("click", sheet);
   // aseprite export runs on the local server (it has to spawn Aseprite); a static host has no endpoint
@@ -379,6 +427,14 @@ function frameLoop(now) {
 build();
 chips();
 wireDetail();
+// ask the server what it can do: a static host has no delete endpoint, so the native right-click menu stays there
+fetch("/api/capabilities")
+  .then((r) => (r.ok ? r.json() : null))
+  .then((c) => {
+    canDelete = !!c?.delete;
+    if (canDelete) for (const t of tiles) if (t.fx.id.startsWith("custom/")) t.fig.title = "right-click to delete";
+  })
+  .catch(() => {});
 $("#q").addEventListener("input", (e) => {
   state.q = e.target.value;
   filter();

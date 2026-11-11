@@ -86,7 +86,9 @@ node tools/render.mjs ice/frost-nova --sheet
 That writes a transparent PNG of every frame in a grid and an Aseprite-style JSON (frame rects, durations, and
 `meta.pixelfx` with fps, loop, columns and the pivot). Phaser's atlas loader and the Aseprite importers for Godot
 and Unity read it. `--scale 200%` (or `--scale 2`) rescales the sheet and the GIF/MP4; the JSON reports the scaled
-sizes and pivot. `node tools/sheets.mjs` exports the whole library to `sheets/`.
+sizes and pivot. `--fps 15` resamples to another frame rate (same duration, fewer frames); frame durations are
+written as whole milliseconds spread across frames, so 60 fps does not drift down to 58.8. `node tools/sheets.mjs`
+exports the whole library to `sheets/` (it takes `--fps` too).
 
 Any effect takes a `palette` (a dark-to-bright ramp of hex colors), so a fire can burn blue and a heal can glow
 pink without touching its code:

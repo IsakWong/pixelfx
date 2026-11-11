@@ -16,7 +16,7 @@
 // This shows the effect by itself, with the character standing by. tools/act.mjs shows it acted out.
 
 import { join } from "node:path";
-import { ROOT, resolveIds, loadEffect, renderFrames, contactSheet, spriteSheet, writeVideo, save, parseScale, exportAseprite } from "./lib/fxlib.mjs";
+import { ROOT, resolveIds, loadEffect, renderFrames, contactSheet, spriteSheet, writeVideo, save, parseScale, parseFps, exportAseprite } from "./lib/fxlib.mjs";
 
 const args = process.argv.slice(2), flags = {}, ids = [];
 for (let i = 0; i < args.length; i++) {
@@ -31,12 +31,19 @@ if (!ids.length) {
 }
 
 const out = flags.out ?? join(ROOT, "records");
+let fps;
+try {
+  fps = parseFps(flags.fps, undefined);
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
 let failed = 0;
 for (const id of resolveIds(ids)) {
   try {
     const fx = await loadEffect(id);
     const r = renderFrames(fx, {
-      fps: flags.fps ? +flags.fps : undefined,
+      fps,
       seed: flags.seed ? +flags.seed : undefined,
       bg: flags.bg,
       actor: flags["no-actor"] ? false : undefined,

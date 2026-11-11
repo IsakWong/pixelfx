@@ -68,7 +68,9 @@ render the effect to a sprite sheet once (below) and play it like any other anim
 frames in a grid) and `frost-nova.json` (Aseprite-style frames, so Phaser's atlas loader, Godot and Unity Aseprite
 importers and most tools read it; `meta.pixelfx` has fps, loop, frame size, columns and the pivot). Set the
 pivot to `meta.pixelfx.pivot` (the effect's origin, e.g. the feet), import with nearest-neighbour filtering and no
-compression, and play at `meta.pixelfx.fps`. Glow is baked into the sheet as color with alpha, which reads as
+compression, and play at `meta.pixelfx.fps`. `--fps N` resamples the sheet to another rate (same duration, fewer
+frames); durations are whole milliseconds spread across frames, so a requested 60 fps averages 60 instead of
+drifting to 58.8. Glow is baked into the sheet as color with alpha, which reads as
 additive over dark scenes; for bright scenes, render a recolored version or keep the effect on a dark layer.
 
 For the full library: `node tools/render.mjs <category> --sheet` does a whole category.
