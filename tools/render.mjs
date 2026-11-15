@@ -11,7 +11,7 @@
 // --zoom N (contact sheet scale) --scale N|150% (sprite sheet and GIF/MP4) --bg dark|ground|sky|light|black|none
 // --seed N --fps N --opts JSON --out DIR
 // --no-actor --loops N (repeat a loop in the GIF/MP4)
-// --aseprite (multi-frame .aseprite through Tools/PGAT) --pgat DIR --python EXE
+// --aseprite（通过 pixel-forge 导出多帧源文件）--studio DIR --python EXE
 //
 // This shows the effect by itself, with the character standing by. tools/act.mjs shows it acted out.
 
@@ -24,6 +24,10 @@ for (let i = 0; i < args.length; i++) {
   if (!a.startsWith("--")) ids.push(a);
   else if (["gif", "mp4", "sheet", "all", "no-actor", "aseprite"].includes(a.slice(2))) flags[a.slice(2)] = true;
   else flags[a.slice(2)] = args[++i];
+}
+if (flags.pgat !== undefined) {
+  console.error("PGAT 现只负责生图；Aseprite 导出请使用 --studio 指定 pixel-forge 路径");
+  process.exit(1);
 }
 if (!ids.length) {
   console.error("usage: node tools/render.mjs <id|category|pattern>... [--gif] [--mp4] [--sheet] [--all]");
@@ -62,7 +66,7 @@ for (const id of resolveIds(ids)) {
     }
     if (flags.aseprite) {
       const name = id.split("/")[1];
-      made.push(exportAseprite(fx, r, { file: join(dir, `${name}.aseprite`), pgat: flags.pgat, python: flags.python, scale }));
+      made.push(exportAseprite(fx, r, { file: join(dir, `${name}.aseprite`), studio: flags.studio, python: flags.python, scale }));
     }
     console.log(`${id}  ${r.n} frames  ->  ${made.join("  ")}`);
   } catch (e) {

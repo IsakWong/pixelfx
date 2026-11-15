@@ -284,11 +284,11 @@ export function spriteSheet(fx, r, name, { scale = 1 } = {}) {
   return { png: img.png(), json };
 }
 
-/** Export frames as one multi-frame .aseprite through Tools/PGAT's Aseprite writer.
- *  Frames come from `r.frames[i].clear` (effect only — no backdrop, no stand-in actor).
- *  Writes a `unity:pivot` slice at the effect's origin so Aseprite2Unity imports it with the right pivot.
- *  pgat: path to the PGAT checkout (its Python API is called in a subprocess). */
-export function exportAseprite(fx, r, { file, pgat = join(ROOT, "..", "PGAT"), python = process.env.PYTHON ?? "python", scale = 1, tag = "default" } = {}) {
+/** 通过 pixel-forge 合成多帧 Aseprite。
+ *  帧取自 r.frames[i].clear，只含特效，不含背景与演示角色。
+ *  在特效原点写 unity:pivot，供 Aseprite2Unity 读取。
+ *  studio 指定 pixel-forge 目录，其 Python API 在子进程中调用。 */
+export function exportAseprite(fx, r, { file, studio = process.env.PIXEL_FORGE_ROOT ?? join(ROOT, "..", "..", "pixel-forge"), python = process.env.PYTHON ?? "python", scale = 1, tag = "default" } = {}) {
   if (!file) throw new Error("exportAseprite: file is required");
   const { w, h, frames, fps } = r, m = fx.meta;
   const fw = Math.max(1, Math.round(w * scale)), fh = Math.max(1, Math.round(h * scale));
@@ -310,14 +310,14 @@ export function exportAseprite(fx, r, { file, pgat = join(ROOT, "..", "PGAT"), p
       "import sys",
       "sys.path.insert(0, sys.argv[1])",
       "from pathlib import Path",
-      "from aigc import aseprite",
+      "from pixel_forge.tools import aseprite",
       "out = Path(sys.argv[2])",
       "frames = [Path(p) for p in sys.argv[3:]]",
       `aseprite.make_animated(out, frames, [aseprite.Tag(${JSON.stringify(tag)}, 1, len(frames), ${repeats})], durations_ms=[${durations.join(", ")}])`,
       `aseprite.write_slices(out, {"unity:pivot": aseprite.Rect(${px - 1}, ${py - 1}, 2, 2)})`,
     ].join("\n");
     mkdirSync(dirname(file), { recursive: true });
-    const res = spawnSync(python, ["-c", code, pgat, file, ...pngs], { encoding: "utf-8" });
+    const res = spawnSync(python, ["-c", code, studio, file, ...pngs], { encoding: "utf-8" });
     if (res.error) throw new Error(`python not found: ${python} (${res.error.message})`);
     if (!existsSync(file)) throw new Error(`aseprite not written: ${(res.stderr || res.stdout || "").trim()}`);
     return file;

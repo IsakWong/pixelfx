@@ -7,7 +7,7 @@
 //   node tools/jasa.mjs "ice/*" --scale 2
 //   node tools/jasa.mjs fire/torch --fps 30 --out /tmp/vfx
 //
-// 选项：--fps N（1-240）--scale N（正整数）--out DIR --pgat DIR --python EXE
+// 选项：--fps N（1-240）--scale N（正整数）--out DIR --studio DIR --python EXE
 //
 // 产物带 `default` tag（meta.loop 时为循环）与 `unity:pivot` slice，
 // VfxAsepriteProcessor 导入后生成 JasaVfx 预制体。每帧时长按目标 fps 逐帧分配
@@ -61,6 +61,10 @@ for (let i = 0; i < args.length; i++) {
   if (!a.startsWith("--")) ids.push(a);
   else flags[a.slice(2)] = args[++i];
 }
+if (flags.pgat !== undefined) {
+  console.error("PGAT 现只负责生图；Aseprite 导出请使用 --studio 指定 pixel-forge 路径");
+  process.exit(1);
+}
 if (!ids.length) {
   console.error("usage: node tools/jasa.mjs <id|category|pattern>... [--fps N] [--scale N] [--out DIR]");
   process.exit(1);
@@ -94,7 +98,7 @@ for (const id of resolveIds(ids)) {
     const name = id.split("/")[1];
     const file = exportAseprite(fx, r, {
       file: join(out, `VFX_${name}.aseprite`),
-      pgat: flags.pgat,
+      studio: flags.studio,
       python: flags.python,
       scale,
     });
