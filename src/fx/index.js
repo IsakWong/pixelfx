@@ -245,27 +245,31 @@ import * as critters_jellyfish from "./critters/jellyfish.js";
 import * as critters_slime from "./critters/slime.js";
 import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
-import * as custom_chill_snow from "./custom/chill-snow.js";
+import * as custom_barrage_muzzle from "./custom/barrage-muzzle.js";
 import * as custom_burning_buff from "./custom/burning-buff.js";
 import * as custom_burning_element from "./custom/burning-element.js";
+import * as custom_chill_snow from "./custom/chill-snow.js";
+import * as custom_door_open_motes from "./custom/door-open-motes.js";
+import * as custom_door_torch_glow from "./custom/door-torch-glow.js";
+import * as custom_hurt_hit_24 from "./custom/hurt-hit-24.js";
 import * as custom_ice_block_16 from "./custom/ice-block-16.js";
 import * as custom_ice_block_32 from "./custom/ice-block-32.js";
 import * as custom_ice_disc from "./custom/ice-disc.js";
 import * as custom_ice_pillar from "./custom/ice-pillar.js";
 import * as custom_ice_pillar_break from "./custom/ice-pillar-break.js";
 import * as custom_ice_pillar_rise from "./custom/ice-pillar-rise.js";
+import * as custom_icon_charge_cross from "./custom/icon-charge-cross.js";
+import * as custom_icon_charge_ready from "./custom/icon-charge-ready.js";
 import * as custom_item_idle_beacon_24 from "./custom/item-idle-beacon-24.js";
 import * as custom_item_idle_orbit_40 from "./custom/item-idle-orbit-40.js";
 import * as custom_item_idle_ring_32 from "./custom/item-idle-ring-32.js";
 import * as custom_laser_impact from "./custom/laser-impact.js";
 import * as custom_laser_source from "./custom/laser-source.js";
-import * as custom_hurt_hit_24 from "./custom/hurt-hit-24.js";
 import * as custom_rank_up from "./custom/rank-up.js";
 import * as custom_reward_gain from "./custom/reward-gain.js";
 import * as custom_topdown_fire_burst from "./custom/topdown-fire-burst.js";
-import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
 import * as custom_wand_muzzle from "./custom/wand-muzzle.js";
-import * as custom_barrage_muzzle from "./custom/barrage-muzzle.js";
+import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
 
 export { categories } from "./categories.js";
 
@@ -515,25 +519,29 @@ export const effects = {
   "critters/slime": critters_slime,
   "critters/snake": critters_snake,
   "critters/wisp": critters_wisp,
-  "custom/chill-snow": custom_chill_snow,
+  "custom/barrage-muzzle": custom_barrage_muzzle,
   "custom/burning-buff": custom_burning_buff,
   "custom/burning-element": custom_burning_element,
+  "custom/chill-snow": custom_chill_snow,
+  "custom/door-open-motes": custom_door_open_motes,
+  "custom/door-torch-glow": custom_door_torch_glow,
+  "custom/hurt-hit-24": custom_hurt_hit_24,
   "custom/ice-block-16": custom_ice_block_16,
   "custom/ice-block-32": custom_ice_block_32,
   "custom/ice-disc": custom_ice_disc,
   "custom/ice-pillar": custom_ice_pillar,
   "custom/ice-pillar-break": custom_ice_pillar_break,
   "custom/ice-pillar-rise": custom_ice_pillar_rise,
+  "custom/icon-charge-cross": custom_icon_charge_cross,
+  "custom/icon-charge-ready": custom_icon_charge_ready,
   "custom/item-idle-beacon-24": custom_item_idle_beacon_24,
   "custom/item-idle-orbit-40": custom_item_idle_orbit_40,
   "custom/item-idle-ring-32": custom_item_idle_ring_32,
   "custom/laser-impact": custom_laser_impact,
   "custom/laser-source": custom_laser_source,
-  "custom/hurt-hit-24": custom_hurt_hit_24,
   "custom/rank-up": custom_rank_up,
   "custom/reward-gain": custom_reward_gain,
   "custom/topdown-fire-burst": custom_topdown_fire_burst,
-  "custom/wisp-fire-16": custom_wisp_fire_16,
   "custom/wand-muzzle": custom_wand_muzzle,
-  "custom/barrage-muzzle": custom_barrage_muzzle,
+  "custom/wisp-fire-16": custom_wisp_fire_16,
 };
