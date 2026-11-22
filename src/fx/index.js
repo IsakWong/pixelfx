@@ -245,12 +245,23 @@ import * as critters_jellyfish from "./critters/jellyfish.js";
 import * as critters_slime from "./critters/slime.js";
 import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
+import * as custom_artillery_blast from "./custom/artillery-blast.js";
+import * as custom_artillery_warning from "./custom/artillery-warning.js";
 import * as custom_barrage_muzzle from "./custom/barrage-muzzle.js";
 import * as custom_burning_buff from "./custom/burning-buff.js";
 import * as custom_burning_element from "./custom/burning-element.js";
 import * as custom_chill_snow from "./custom/chill-snow.js";
+import * as custom_dark_star_pull from "./custom/dark-star-pull.js";
 import * as custom_door_open_motes from "./custom/door-open-motes.js";
 import * as custom_door_torch_glow from "./custom/door-torch-glow.js";
+import * as custom_element_proc_impact from "./custom/element-proc-impact.js";
+import * as custom_enemy_barrage_orb from "./custom/enemy-barrage-orb.js";
+import * as custom_imp_barrage_warning from "./custom/imp-barrage-warning.js";
+import * as custom_imp_ember_ring from "./custom/imp-ember-ring.js";
+import * as custom_imp_lockdown_explosion from "./custom/imp-lockdown-explosion.js";
+import * as custom_imp_trident_dash from "./custom/imp-trident-dash.js";
+import * as custom_imp_trident_swipe from "./custom/imp-trident-swipe.js";
+import * as custom_imp_weapon_charge from "./custom/imp-weapon-charge.js";
 import * as custom_hurt_hit_24 from "./custom/hurt-hit-24.js";
 import * as custom_ice_block_16 from "./custom/ice-block-16.js";
 import * as custom_ice_block_32 from "./custom/ice-block-32.js";
@@ -268,6 +279,8 @@ import * as custom_laser_source from "./custom/laser-source.js";
 import * as custom_rank_up from "./custom/rank-up.js";
 import * as custom_reward_gain from "./custom/reward-gain.js";
 import * as custom_topdown_fire_burst from "./custom/topdown-fire-burst.js";
+import * as custom_wand_core_dissipate from "./custom/wand-core-dissipate.js";
+import * as custom_wand_core_flight from "./custom/wand-core-flight.js";
 import * as custom_wand_muzzle from "./custom/wand-muzzle.js";
 import * as custom_wisp_fire_16 from "./custom/wisp-fire-16.js";
 
@@ -519,12 +532,23 @@ export const effects = {
   "critters/slime": critters_slime,
   "critters/snake": critters_snake,
   "critters/wisp": critters_wisp,
+  "custom/artillery-blast": custom_artillery_blast,
+  "custom/artillery-warning": custom_artillery_warning,
   "custom/barrage-muzzle": custom_barrage_muzzle,
   "custom/burning-buff": custom_burning_buff,
   "custom/burning-element": custom_burning_element,
   "custom/chill-snow": custom_chill_snow,
+  "custom/dark-star-pull": custom_dark_star_pull,
   "custom/door-open-motes": custom_door_open_motes,
   "custom/door-torch-glow": custom_door_torch_glow,
+  "custom/element-proc-impact": custom_element_proc_impact,
+  "custom/enemy-barrage-orb": custom_enemy_barrage_orb,
+  "custom/imp-barrage-warning": custom_imp_barrage_warning,
+  "custom/imp-ember-ring": custom_imp_ember_ring,
+  "custom/imp-lockdown-explosion": custom_imp_lockdown_explosion,
+  "custom/imp-trident-dash": custom_imp_trident_dash,
+  "custom/imp-trident-swipe": custom_imp_trident_swipe,
+  "custom/imp-weapon-charge": custom_imp_weapon_charge,
   "custom/hurt-hit-24": custom_hurt_hit_24,
   "custom/ice-block-16": custom_ice_block_16,
   "custom/ice-block-32": custom_ice_block_32,
@@ -542,6 +566,8 @@ export const effects = {
   "custom/rank-up": custom_rank_up,
   "custom/reward-gain": custom_reward_gain,
   "custom/topdown-fire-burst": custom_topdown_fire_burst,
+  "custom/wand-core-dissipate": custom_wand_core_dissipate,
+  "custom/wand-core-flight": custom_wand_core_flight,
   "custom/wand-muzzle": custom_wand_muzzle,
   "custom/wisp-fire-16": custom_wisp_fire_16,
 };
