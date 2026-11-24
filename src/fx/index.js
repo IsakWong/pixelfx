@@ -245,6 +245,7 @@ import * as critters_jellyfish from "./critters/jellyfish.js";
 import * as critters_slime from "./critters/slime.js";
 import * as critters_snake from "./critters/snake.js";
 import * as critters_wisp from "./critters/wisp.js";
+import * as custom_arc_swipe from "./custom/arc-swipe.js";
 import * as custom_artillery_blast from "./custom/artillery-blast.js";
 import * as custom_artillery_warning from "./custom/artillery-warning.js";
 import * as custom_barrage_muzzle from "./custom/barrage-muzzle.js";
@@ -532,6 +533,7 @@ export const effects = {
   "critters/slime": critters_slime,
   "critters/snake": critters_snake,
   "critters/wisp": critters_wisp,
+  "custom/arc-swipe": custom_arc_swipe,
   "custom/artillery-blast": custom_artillery_blast,
   "custom/artillery-warning": custom_artillery_warning,
   "custom/barrage-muzzle": custom_barrage_muzzle,
